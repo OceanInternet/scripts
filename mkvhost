@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# ========================================= #
+# Make (devalopment) virtual host on Ubuntu #
+# ========================================= #
+
+# Settings
+VHOST_DIR="/var/www";
+PUBLIC_HTML_DIR="public_html"
+SITES_AVAILABLE_DIR="/etc/apache2/sites-available";
+SSL_CERT_FILE="/etc/ssl/certs/ssl-cert-snakeoil.pem";
+SSL_KEY_FILE="/etc/ssl/private/ssl-cert-snakeoil.key";
+
+# Check domain was submitted
+if [ $# -eq 0 ] ; then
+    echo -e "\n\e[1mmkvhost\e[21m:           \e[41mmissing domain\e[0m";
+    echo -e "\e[1mUsage\e[21m:             makevhost www.domain.com\n";
+    exit 0;
+else
+    DOMAIN=$1;
+fi
+
+# Check domain was valid
+if [[ $DOMAIN =~ ^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,6}$ ]]; then
+    echo -e "\n\e[1mDomain\e[21m:            \e[32m$DOMAIN\e[0m";
+else
+    echo -e "\n\e[1mmkvhost\e[21m:           \e[41minvalid domain\e[0m";
+    echo -e "\e[1mUsage\e[21m:             makevhost www.domain.com\n";
+    exit 0;
+fi
+
+# Create vhost file
+echo -e "\n\e[1mCreate vhost file\e[21m: \e[32m$SITES_AVAILABLE_DIR/$DOMAIN\e[0m";
+sudo -k cat > $SITES_AVAILABLE_DIR/$DOMAIN << EOF
+<VirtualHost *:80>
+    ServerName   $DOMAIN
+    DocumentRoot $VHOST_DIR/$DOMAIN/$PUBLIC_HTML_DIR
+</VirtualHost>
+<VirtualHost *:443>
+    ServerName            $DOMAIN    
+    DocumentRoot          $VHOST_DIR/$DOMAIN/$PUBLIC_HTML_DIR
+    SSLEngine             On
+    SSLCertificateFile    $SSL_CERT_FILE
+    SSLCertificateKeyFile $SSL_KEY_FILE
+</VirtualHost>
+EOF
+
+# Enable vhost
+echo -e "\n\e[1mEnable vhost\e[21m:      \e[32me2ensite $DOMAIN\e[0m";
+sudo a2ensite $DOMAIN;
+
+# Reolad Apache2
+echo -e "\n\e[1mReload apache2\e[21m:    \e[32mservice apache2 reload\e[0m";
+sudo service apache2 reload;
+
+# Add entry to hostfile
+echo -e "\n\e[1mAdd to hostfile2\e[21m:  \e[32m127.0.0.1      $DOMAIN\e[0m";
+echo "127.0.0.1      $DOMAIN" >> /etc/hosts

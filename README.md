@@ -1,4 +1,4 @@
 scripts
 =======
 
-bash scripts to aid in web app development
+Bash scripts to aid in web app development.
